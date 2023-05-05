@@ -21,13 +21,15 @@ Comparing the performance of Tarjan-Vishkin algorithm with and without DSUs
 
 - try to create a visualisation perhaps?
 - dfs approach
+- unconnected graph
 
 ## Ideas
 
 - Project doc asks us to compare with other algorithms such as Tarjan's
 - So we need to implement Tarjan's algorithm as well
-- Also look into other algorithms such as Hopcroft-Tarjan, etc.
+- Also look into other algorithms such as Tarjan, etc.
 
+- Performace on connected and unconnected graphs
 - What vertex to use as root for Spanning Tree?
 - Perhaps use 4-Sweep to choose the root
 - Cong Bader

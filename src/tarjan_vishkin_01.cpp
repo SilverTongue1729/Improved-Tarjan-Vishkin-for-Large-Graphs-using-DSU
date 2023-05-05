@@ -9,7 +9,6 @@ using namespace std;
 #define cerr if(0) cerr
 #endif
 
-int cnt;
 vector<vector<int>> adj; 
 vector<bool> visited; 
 vector<vector<int>> dfstree, backedge;
@@ -87,7 +86,7 @@ void dfs_a(int cur, int par=-1){
 void dfs_conn(pair<int,int> p){
   vis_aux[p] = true;
   cout << p.first << "--" << p.second << " ";
-  for (auto x:auxillary[p]){
+  for (auto& x:auxillary[p]){
     if (vis_aux[x] == false){
       dfs_conn(x);
     }
@@ -152,14 +151,13 @@ int main(){
   cerr << "dfs c: " << endl;
   dfs_c(0);
   cerr << endl;
-  
-  for (auto p:auxillary){
+
+  for (auto& p : auxillary) {
     if (vis_aux[p.first] == true) continue;
     vis_aux[p.first] = true;
     dfs_conn(p.first);
     cout <<endl;
   }
-  
 
   return 0;
 }

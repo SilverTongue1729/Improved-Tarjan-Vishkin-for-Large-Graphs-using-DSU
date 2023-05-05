@@ -42,9 +42,8 @@ void make_tree_bfs(int u = root) {
         vis[v] = true;
         tree[cur].push_back(v);  // only par->child edges
         q.push(v);
-      } else if (par[cur] != v) {
+      } else if (par[cur] != v)
         backedge[cur].push_back(v);
-      }
     }
   }
 }
@@ -77,7 +76,6 @@ void calc_low_high(int cur = root) {
 }
 
 void aux_add(pair<int,int> u, pair<int,int> v) {
-  cerr << u.first << "--" << u.second << " " << v.first << "--" << v.second << endl;
   auxiliary[{pre[u.first], pre[u.second]}].push_back({pre[v.first], pre[v.second]});
   auxiliary[{pre[v.first], pre[v.second]}].push_back({pre[u.first], pre[u.second]});
 }
@@ -85,20 +83,14 @@ void aux_add(pair<int,int> u, pair<int,int> v) {
 void build_aux(int cur=root){
   for (auto v : tree[cur]) {
     build_aux(v);
-    if (pre[v] != 0 && (low[v] < pre[cur] || high[v] >= pre[cur] + nd[cur])){
-      cerr << "iii) ";
+    if (pre[v] != 0 && (low[v] < pre[cur] || high[v] >= pre[cur] + nd[cur]))
       aux_add({par[cur], cur}, {cur, v});
-    }
   }
   for (auto v : backedge[cur]) {
-    if (pre[cur] < pre[v]){
-      cerr << "i) ";
+    if (pre[cur] < pre[v])
       aux_add({cur, v}, {par[v], v});
-    }
-    if (pre[cur] + nd[cur] <= pre[v]){
-      cerr << "ii) ";
+    if (pre[cur] + nd[cur] <= pre[v])
       aux_add({par[cur], cur}, {par[v], v});
-    }
   }
 }
 
@@ -130,49 +122,15 @@ int main(){
   vis = vector<bool>(n);
   tree = backedge = vector<vector<int>>(n);
   par = vector<int>(n,-1);
-  // make_tree_bfs(root);
-  make_tree_dfs(root);
-  
-  cerr << "Backedges: " << endl;
-  for(int i=0;i<n;i++) {
-    cerr << i << ": ";
-    for(auto x:backedge[i]) cerr << x << " ";
-    cerr << endl;
-  }
-  cerr << endl;
-  
-  cerr << "Tree: " << endl;
-  for(int i=0;i<n;i++) {
-    cerr << i << ": ";
-    for(auto x:tree[i]) cerr << x << " ";
-    cerr << endl;
-  }
-  cerr << endl;
-  
-  // vis.assign(n,false);
-  // cerr << "Preorder: " << endl;
-  // PreOrderCalc(0);
-  // for(int i=0;i<n;i++) cerr << pre[i] << " ";
-  // cerr << endl;
-  
+  make_tree_bfs(root);
+  // make_tree_dfs(root);
+      
   inv_pre = pre = nd = vector<int>(n,-1);
   calc_pre_par_nd(root);
-  
-  cerr << "Preorder: " << endl;
-  for(int i=0;i<n;i++) cerr << pre[i] << " ";
-  cerr << endl;
-  
+    
   low = high = vector<int>(n,-1);
   calc_low_high(root);
   
-  cerr << "Low: " << endl;
-  for(int i=0;i<n;i++) cerr << low[i] << " ";
-  cerr << endl;
-  cerr << "High: " << endl;
-  for(int i=0;i<n;i++) cerr << high[i] << " ";
-  cerr << endl;  
-  
-  cerr << "Auxillary Edges: " << endl;
   build_aux(root);
     
   for (int i=0;i<n;i++){
@@ -184,30 +142,5 @@ int main(){
     }
   }
   
-  
   return 0;
 }
-/*
-4 4
-1 2
-2 3
-3 4
-2 4
-*/
-
-/*
-{1,2} {2,3} {1,3} {3,4} {2,4} 
-4--2 3--4 3--1 2--3 1--2
-
-{0,1} {1,5} {5,6} {0,6} 
-6--0 5--6 1--5 0--1 
-
-{5,7} {7,8} {5,8} 
-8--5 7--8 5--7
-
-8--9
-{8,9} 
-
-{10,11}
-10--11
-*/
