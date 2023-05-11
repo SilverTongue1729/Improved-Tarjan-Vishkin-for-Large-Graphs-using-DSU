@@ -23,6 +23,12 @@ Comparing the performance of Tarjan-Vishkin algorithm with and without DSUs
 - dfs approach
 - unconnected graph
 
+## Assumptions
+
+- graph doesn't have self loops
+- graph is undirected, unweighted
+- graph need not be connected, need not be simple
+
 ## Ideas
 
 - Project doc asks us to compare with other algorithms such as Tarjan's
@@ -33,6 +39,7 @@ Comparing the performance of Tarjan-Vishkin algorithm with and without DSUs
 - What vertex to use as root for Spanning Tree?
 - Perhaps use 4-Sweep to choose the root
 - Cong Bader
+- 
 - maintain list of non-tree edges
 - such as choosing a dfs tree removes step b
 - try partial dfs and bfs trees?

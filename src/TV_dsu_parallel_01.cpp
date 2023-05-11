@@ -29,11 +29,12 @@ void make_tree_dfs(int cur=root, int par=-1) {
   }
 }
 
-void make_tree_bfs(int u = root) {
+int make_tree_bfs(int u = root) {
   vector<int> par(n,-1);
   queue<int> q;
   vis[u] = true;
   q.push(u);
+  int n=1;
   while (!q.empty()){
     int cur = q.front();
     q.pop();
@@ -43,11 +44,13 @@ void make_tree_bfs(int u = root) {
         par[v] = cur;
         tree[cur].push_back(v);  // only par->child edges
         q.push(v);
+        n++;
       } else if (par[cur] != v){
         backedge[cur].push_back(v);
       }
     }
   }
+  return n;
 }
 
 int calc_pre_par_nd(int cur = root) {
@@ -125,45 +128,68 @@ int main(){
 #endif
   ios_base::sync_with_stdio(false); cin.tie(0);
   
-
   cin>>n>>m;
   adj = vector<vector<int>>(n);
   
   for(int i=0;i<m;i++){
     int u,v; cin>>u>>v;
-    u--; v--;
+    // u--; v--;
     adj[u].push_back(v);
     adj[v].push_back(u);
-  } 
-      
-  root = 0;
+  }
+  
   vis = vector<bool>(n);
   tree = backedge = vector<vector<int>>(n);
-  make_tree_bfs(root);
-  // make_tree_dfs(root);
-      
   inv_pre = pre = par = nd = vector<int>(n,-1);
-  calc_pre_par_nd(root);
-    
   low = high = vector<int>(n,-1);
-  calc_low_high(root);
-  
-  
+
+  vector<int> roots;
+  for (int i=0;i<n;i++){
+    if (!vis[i]){
+      root = i;
+      roots.push_back(i);
+      make_tree_dfs(i);
+      // make_tree_bfs(i);
+      calc_pre_par_nd(i);
+      calc_low_high(i);
+    }
+  }
+  // print(roots);
+    
   for (int i=0;i<n;i++)
     for (auto v:adj[i])
       if (pre[i] < pre[v]) 
         make({pre[i],pre[v]});
   
-  build_aux(root);
-  
+  for (auto root:roots){
+    build_aux(root);
+  }
+    
   map<pair<int,int>,vector<pair<int,int>>> auxiliary;
   
   for (auto p:parent)
     auxiliary[find(p.first)].push_back(p.first);
   
+  vector<set<int>> ans;
+  vis.assign(n,false);
   for (auto p:auxiliary){
-    for (auto x:p.second)
-      cout << inv_pre[x.first] << "--" << inv_pre[x.second] << " ";
+    set<int> aux;
+    for (auto x:p.second){
+      aux.insert(inv_pre[x.first]);
+      aux.insert(inv_pre[x.second]);  
+      vis[inv_pre[x.first]] = true;
+      vis[inv_pre[x.second]] = true;
+    }
+    if (aux.size() > 1) ans.push_back(aux);
+  }
+  
+  for (int i=0;i<n;i++)
+    if (!vis[i]) ans.push_back({i});
+    
+  cout << ans.size() << endl;
+  for (auto s:ans){
+    cout << s.size() << " ";
+    for (auto x:s) cout << x << " ";
     cout << endl;
   }
     
