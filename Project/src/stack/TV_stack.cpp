@@ -1,5 +1,9 @@
 #include <bits/stdc++.h>
+#include <sys/resource.h>
 using namespace std;
+
+#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,fast-math,O3")
+#pragma GCC target("sse,sse2,sse3,ssse3,sse4,abm,bmi,bmi2,lzcnt,popcnt,mmx,avx,avx2,tune=native")
 
 #ifdef LOCAL
 #include "/home/sriteja/Competitive Programming/Debugging/print.cpp"
@@ -111,6 +115,22 @@ int main(){
   freopen("/home/sriteja/Competitive Programming/Debugging/IO/output_01.txt","w",stderr);
 #endif
   ios_base::sync_with_stdio(false); cin.tie(0);
+  
+  // only use it for dfs
+  const rlim_t kStackSize = 1024 * 1024 * 1024;  // 1 GB stack size
+  struct rlimit rl;
+  int result;
+
+  result = getrlimit(RLIMIT_STACK, &rl);
+  if (result == 0) {
+    if (rl.rlim_cur < kStackSize) {
+      rl.rlim_cur = kStackSize;
+      result = setrlimit(RLIMIT_STACK, &rl);
+      if (result != 0) {
+        std::cerr << "setrlimit returned result = " << result << std::endl;
+      }
+    }
+  }
 
   int n,m; cin>>n>>m;
   adj = vector<vector<int>>(n);

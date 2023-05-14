@@ -1,12 +1,8 @@
 #include <bits/stdc++.h>
-#include <execution>
-#include <algorithm>
-#include <vector>
-
 using namespace std;
 
-// #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,fast-math,O3")
-// #pragma GCC target("sse,sse2,sse3,ssse3,sse4,abm,bmi,bmi2,lzcnt,popcnt,mmx,avx,avx2,tune=native")
+#pragma GCC optimize("Ofast,unroll-loops")
+#pragma GCC target("sse,sse2,sse3,ssse3,sse4,abm,bmi,bmi2,lzcnt,popcnt,mmx,avx,avx2,tune=native")
 
 #ifdef LOCAL
 #include "/home/sriteja/Competitive Programming/Debugging/print.cpp"
@@ -139,15 +135,25 @@ int main() {
   cin >> n >> m;
   adj = vector<vector<int>>(n);
 
+  vis = vector<bool>(n);
   for (int i = 0; i < m; i++) {
     int u, v;
     cin >> u >> v;
     // u--; v--;
     adj[u].push_back(v);
     adj[v].push_back(u);
+    vis[u] = vis[v] = true;
   }
 
-  vis = vector<bool>(n);
+  vector<vector<int>> ans;
+  for (int i = 0; i < n; i++)
+    if (!vis[i]) {
+      ans.push_back({i});
+      print(i);
+    }
+
+  vis.assign(n, false);
+
   tree = backedge = vector<vector<int>>(n);
   inv_pre = pre = par = nd = vector<int>(n, -1);
   low = high = vector<int>(n, -1);
@@ -170,43 +176,43 @@ int main() {
       if (pre[i] < pre[v])
         make({pre[i], pre[v]});
 
-  // for (auto root:roots){
-  //   build_aux(root);
-  // }
-
-  std::for_each(std::execution::par, roots.begin(), roots.end(), [&](auto root) {
+  for (auto root : roots) {
     build_aux(root);
-  });
-  
-  // for (size_t i = 0; i < roots.size(); ++i) {
-  //   build_aux(roots[i]);
-  // }
-
-  map<pair<int, int>, vector<pair<int, int>>> auxiliary;
-
-  for (auto p : parent)
-    auxiliary[find(p.first)].push_back(p.first);
-
-  vector<set<int>> ans;
-  vis.assign(n, false);
-  for (auto p : auxiliary) {
-    set<int> aux;
-    for (auto x : p.second) {
-      aux.insert(inv_pre[x.first]);
-      aux.insert(inv_pre[x.second]);
-      vis[inv_pre[x.first]] = true;
-      vis[inv_pre[x.second]] = true;
-    }
-    if (aux.size() > 1) ans.push_back(aux);
   }
 
-  for (int i = 0; i < n; i++)
-    if (!vis[i]) ans.push_back({i});
+  map<pair<int, int>, int> mp;
 
+  vis.assign(n, false);
+
+  int cnt = ans.size();
+
+  for (auto p : parent) {
+    if (mp.find(find(p.first)) == mp.end()) {
+      mp[p.second] = cnt;
+      // mp.insert({p.second,cnt});
+      cnt++;
+      ans.push_back({p.first.first, p.first.second});
+
+    } else {
+      ans[mp[p.second]].push_back(p.first.first);
+      ans[mp[p.second]].push_back(p.first.second);
+    }
+  }
+  
   cout << ans.size() << endl;
   for (auto s : ans) {
-    cout << s.size() << " ";
-    for (auto x : s) cout << x << " ";
+    // if (s.size() > 2) cout << s.size()/2 << " ";
+    // else cout << s.size() << " ";
+    unordered_set<int> st;
+    vector<int> temp;
+    for (auto x : s) {
+      if (st.find(inv_pre[x]) != st.end()) continue;
+      st.insert(inv_pre[x]);
+      // cout << inv_pre[x] << " ";
+      temp.push_back(inv_pre[x]);
+    }
+    cout << temp.size() << " ";
+    for (auto x : temp) cout << x << " ";
     cout << endl;
   }
 

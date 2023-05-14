@@ -1,19 +1,15 @@
 #include <bits/stdc++.h>
-#include <execution>
-#include <algorithm>
-#include <vector>
-
+#include <sys/resource.h>
 using namespace std;
 
-// #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,fast-math,O3")
-// #pragma GCC target("sse,sse2,sse3,ssse3,sse4,abm,bmi,bmi2,lzcnt,popcnt,mmx,avx,avx2,tune=native")
+#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,fast-math,O3")
+#pragma GCC target("sse,sse2,sse3,ssse3,sse4,abm,bmi,bmi2,lzcnt,popcnt,mmx,avx,avx2,tune=native")
 
 #ifdef LOCAL
 #include "/home/sriteja/Competitive Programming/Debugging/print.cpp"
 #else
 #define print(...) ((void)0)
-#define cerr \
-  if (0) cerr
+
 #endif
 
 int n, m;
@@ -22,6 +18,102 @@ vector<vector<int>> adj;
 vector<vector<int>> tree, backedge;
 vector<bool> vis;
 vector<int> pre, inv_pre, par, nd, low, high;
+map<pair<int, int>, vector<pair<int, int>>> auxiliary;
+vector<set<int>> ans;
+vector<bool> vis1, vis2, vis3, vis4;
+vector<int> par1, par2;
+
+int center(int r1) {  // 4-sweep
+  // find r1 which is farthest from
+  queue<int> q;
+  q.push(r1);
+  vis1[r1] = true;
+  int a1 = r1;
+  while (!q.empty()) {
+    int cur = q.front();
+    q.pop();
+    for (auto x : adj[cur]) {
+      if (!vis1[x]) {
+        vis1[x] = true;
+        q.push(x);
+        a1 = x;
+      }
+    }
+  }
+  // find b1 which is farthest from a1
+  // also find the point midways between a1 and b1
+  q.push(a1);
+  vis2[a1] = true;
+  int b1 = a1;
+  while (!q.empty()) {
+    int cur = q.front();
+    q.pop();
+    for (auto x : adj[cur]) {
+      if (!vis2[x]) {
+        vis2[x] = true;
+        q.push(x);
+        par1[x] = cur;
+        b1 = x;
+      }
+    }
+  }
+
+  int r2 = b1;  // midpoint between a1 and b1
+  int temp = b1;
+
+  while (temp != a1) {
+    temp = par1[temp];
+    if (temp == a1) break;
+    r2 = par1[r2];
+    temp = par1[temp];
+  }
+
+  // find a2 which is farthest from r2
+  q.push(r2);
+  vis3[r2] = true;
+  int a2 = r2;
+  while (!q.empty()) {
+    int cur = q.front();
+    q.pop();
+    for (auto x : adj[cur]) {
+      if (!vis3[x]) {
+        vis3[x] = true;
+        q.push(x);
+        a2 = x;
+      }
+    }
+  }
+
+  // find b2 which is farthest from a2
+  // also find the point midways between a2 and b2
+  q.push(a2);
+  vis4[a2] = true;
+  int b2 = a2;
+  while (!q.empty()) {
+    int cur = q.front();
+    q.pop();
+    for (auto x : adj[cur]) {
+      if (!vis4[x]) {
+        vis4[x] = true;
+        q.push(x);
+        par2[x] = cur;
+        b2 = x;
+      }
+    }
+  }
+
+  int r3 = b2;  // midpoint between a2 and b2
+  temp = b2;
+
+  while (temp != a2) {
+    temp = par2[temp];
+    if (temp == a2) break;
+    r3 = par2[r3];
+    temp = par2[temp];
+  }
+
+  return r3;
+}
 
 void make_tree_dfs(int cur = root, int par = -1) {
   vis[cur] = true;
@@ -135,9 +227,29 @@ int main() {
 #endif
   ios_base::sync_with_stdio(false);
   cin.tie(0);
+  
+  auto start = std::chrono::high_resolution_clock::now();
+
+  // only use it for dfs
+  const rlim_t kStackSize = 1024 * 1024 * 1024;  // 1 GB stack size
+  struct rlimit rl;
+  int result;
+
+  result = getrlimit(RLIMIT_STACK, &rl);
+  if (result == 0) {
+    if (rl.rlim_cur < kStackSize) {
+      rl.rlim_cur = kStackSize;
+      result = setrlimit(RLIMIT_STACK, &rl);
+      if (result != 0) {
+        std::cerr << "setrlimit returned result = " << result << std::endl;
+      }
+    }
+  }
 
   cin >> n >> m;
   adj = vector<vector<int>>(n);
+  vis1 = vis2 = vis3 = vis4 = vector<bool>(n);
+  par1 = par2 = vector<int>(n);
 
   for (int i = 0; i < m; i++) {
     int u, v;
@@ -155,39 +267,32 @@ int main() {
   vector<int> roots;
   for (int i = 0; i < n; i++) {
     if (!vis[i]) {
-      root = i;
-      roots.push_back(i);
-      make_tree_dfs(i);
-      // make_tree_bfs(i);
-      calc_pre_par_nd(i);
-      calc_low_high(i);
+      // int sw_rt = i;
+      int sw_rt = center(i);
+      root = sw_rt;
+      roots.push_back(sw_rt);
+      // cout << "sw_rt: "<<sw_rt << endl;
+
+      make_tree_dfs(sw_rt);
+      // make_tree_bfs(sw_rt);
+      calc_pre_par_nd(sw_rt);
+      calc_low_high(sw_rt);
     }
   }
-  // print(roots);
 
   for (int i = 0; i < n; i++)
     for (auto v : adj[i])
       if (pre[i] < pre[v])
         make({pre[i], pre[v]});
 
-  // for (auto root:roots){
-  //   build_aux(root);
-  // }
-
-  std::for_each(std::execution::par, roots.begin(), roots.end(), [&](auto root) {
+  for (auto root : roots) {
     build_aux(root);
-  });
-  
-  // for (size_t i = 0; i < roots.size(); ++i) {
-  //   build_aux(roots[i]);
-  // }
+  }
 
-  map<pair<int, int>, vector<pair<int, int>>> auxiliary;
 
   for (auto p : parent)
     auxiliary[find(p.first)].push_back(p.first);
 
-  vector<set<int>> ans;
   vis.assign(n, false);
   for (auto p : auxiliary) {
     set<int> aux;
@@ -203,12 +308,16 @@ int main() {
   for (int i = 0; i < n; i++)
     if (!vis[i]) ans.push_back({i});
 
-  cout << ans.size() << endl;
-  for (auto s : ans) {
-    cout << s.size() << " ";
-    for (auto x : s) cout << x << " ";
-    cout << endl;
-  }
+  // cout << ans.size() << endl;
+  // for (auto s : ans) {
+  //   cout << s.size() << " ";
+  //   for (auto x : s) cout << x << " ";
+  //   cout << endl;
+  // }
+
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+  std::cout << "Elapsed time: " << ((duration.count() * 1.0) / 1000000.0) << " seconds" << std::endl;
 
   return 0;
 }

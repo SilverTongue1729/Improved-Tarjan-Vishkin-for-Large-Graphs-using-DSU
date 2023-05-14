@@ -59,18 +59,18 @@ int main(){
   
   for(int i=0;i<m;i++){
     int u,v; cin>>u>>v;
-    u--; v--;
+    // u--; v--;
     adj[u].push_back(v);
     adj[v].push_back(u);
   }  
   
   disc = low = parent = vector<int>(n,-1);
-  
+    
   for(int i=0;i<n;i++){
     if(disc[i]==-1){
       dfs(i);
     }
-    
+    set<int> s;
     int j=0;
     while (st.size() > 0) {
       j = 1;

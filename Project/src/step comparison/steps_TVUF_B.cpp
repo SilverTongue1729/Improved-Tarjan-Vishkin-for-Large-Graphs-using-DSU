@@ -1,12 +1,8 @@
 #include <bits/stdc++.h>
-#include <execution>
-#include <algorithm>
-#include <vector>
-
 using namespace std;
 
-// #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,fast-math,O3")
-// #pragma GCC target("sse,sse2,sse3,ssse3,sse4,abm,bmi,bmi2,lzcnt,popcnt,mmx,avx,avx2,tune=native")
+#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,fast-math")
+#pragma GCC target("sse,sse2,sse3,ssse3,sse4,abm,bmi,bmi2,lzcnt,popcnt,mmx,avx,avx2,tune=native")
 
 #ifdef LOCAL
 #include "/home/sriteja/Competitive Programming/Debugging/print.cpp"
@@ -22,6 +18,8 @@ vector<vector<int>> adj;
 vector<vector<int>> tree, backedge;
 vector<bool> vis;
 vector<int> pre, inv_pre, par, nd, low, high;
+map<pair<int, int>, vector<pair<int, int>>> auxiliary;
+vector<set<int>> ans;
 
 void make_tree_dfs(int cur = root, int par = -1) {
   vis[cur] = true;
@@ -136,6 +134,8 @@ int main() {
   ios_base::sync_with_stdio(false);
   cin.tie(0);
 
+  auto start = std::chrono::high_resolution_clock::now();
+
   cin >> n >> m;
   adj = vector<vector<int>>(n);
 
@@ -157,37 +157,33 @@ int main() {
     if (!vis[i]) {
       root = i;
       roots.push_back(i);
-      make_tree_dfs(i);
-      // make_tree_bfs(i);
+      // make_tree_dfs(i);
+      make_tree_bfs(i);
       calc_pre_par_nd(i);
       calc_low_high(i);
     }
   }
   // print(roots);
+  auto calc = std::chrono::high_resolution_clock::now();
+  auto calc_duration = std::chrono::duration_cast<std::chrono::microseconds>(calc - start);
+  std::cout << "building tree and low, high calc time: " << ((calc_duration.count() * 1.0) / 1000000.0) << " seconds" << std::endl;
 
   for (int i = 0; i < n; i++)
     for (auto v : adj[i])
       if (pre[i] < pre[v])
         make({pre[i], pre[v]});
 
-  // for (auto root:roots){
-  //   build_aux(root);
-  // }
-
-  std::for_each(std::execution::par, roots.begin(), roots.end(), [&](auto root) {
+  for (auto root : roots) {
     build_aux(root);
-  });
-  
-  // for (size_t i = 0; i < roots.size(); ++i) {
-  //   build_aux(roots[i]);
-  // }
+  }
 
-  map<pair<int, int>, vector<pair<int, int>>> auxiliary;
+  auto aux = std::chrono::high_resolution_clock::now();
+  auto aux_duration = std::chrono::duration_cast<std::chrono::microseconds>(aux - calc);
+  std::cout << "building auxiliary graph time: " << ((aux_duration.count() * 1.0) / 1000000.0) << " seconds" << std::endl;
 
   for (auto p : parent)
     auxiliary[find(p.first)].push_back(p.first);
 
-  vector<set<int>> ans;
   vis.assign(n, false);
   for (auto p : auxiliary) {
     set<int> aux;
@@ -203,12 +199,16 @@ int main() {
   for (int i = 0; i < n; i++)
     if (!vis[i]) ans.push_back({i});
 
-  cout << ans.size() << endl;
-  for (auto s : ans) {
-    cout << s.size() << " ";
-    for (auto x : s) cout << x << " ";
-    cout << endl;
-  }
+  // cout << ans.size() << endl;
+  // for (auto s:ans){
+  //   cout << s.size() << " ";
+  //   for (auto x:s) cout << x << " ";
+  //   cout << endl;
+  // }
+
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - aux);
+  std::cout << "Finding BCC: " << ((duration.count() * 1.0) / 1000000.0) << " seconds" << std::endl;
 
   return 0;
 }

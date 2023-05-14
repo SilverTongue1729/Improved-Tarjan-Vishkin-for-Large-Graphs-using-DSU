@@ -1,12 +1,8 @@
 #include <bits/stdc++.h>
-#include <execution>
-#include <algorithm>
-#include <vector>
-
 using namespace std;
 
-// #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,fast-math,O3")
-// #pragma GCC target("sse,sse2,sse3,ssse3,sse4,abm,bmi,bmi2,lzcnt,popcnt,mmx,avx,avx2,tune=native")
+#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,fast-math,O3")
+#pragma GCC target("sse,sse2,sse3,ssse3,sse4,abm,bmi,bmi2,lzcnt,popcnt,mmx,avx,avx2,tune=native")
 
 #ifdef LOCAL
 #include "/home/sriteja/Competitive Programming/Debugging/print.cpp"
@@ -16,12 +12,14 @@ using namespace std;
   if (0) cerr
 #endif
 
-int n, m;
 int root;
 vector<vector<int>> adj;
 vector<vector<int>> tree, backedge;
 vector<bool> vis;
 vector<int> pre, inv_pre, par, nd, low, high;
+map<pair<int, int>, vector<pair<int, int>>> auxiliary;
+map<pair<int, int>, bool> vis_aux;
+vector<set<int>> ans;
 
 void make_tree_dfs(int cur = root, int par = -1) {
   vis[cur] = true;
@@ -36,28 +34,22 @@ void make_tree_dfs(int cur = root, int par = -1) {
   }
 }
 
-int make_tree_bfs(int u = root) {
-  vector<int> par(n, -1);
+void make_tree_bfs(int u = root) {
   queue<int> q;
   vis[u] = true;
   q.push(u);
-  int n = 1;
   while (!q.empty()) {
     int cur = q.front();
     q.pop();
     for (auto v : adj[cur]) {
       if (!vis[v]) {
         vis[v] = true;
-        par[v] = cur;
         tree[cur].push_back(v);  // only par->child edges
         q.push(v);
-        n++;
-      } else if (par[cur] != v) {
+      } else if (par[cur] != v)
         backedge[cur].push_back(v);
-      }
     }
   }
-  return n;
 }
 
 int calc_pre_par_nd(int cur = root) {
@@ -87,46 +79,34 @@ void calc_low_high(int cur = root) {
   }
 }
 
-map<pair<int, int>, pair<int, int>> parent;
-map<pair<int, int>, int> sz;
-
-void make(pair<int, int> v) {
-  parent[v] = v;
-  sz[v] = 1;
-}
-
-pair<int, int> find(pair<int, int> v) {
-  if (v == parent[v]) return v;
-  return parent[v] = find(parent[v]);
-}
-
-void Union(pair<int, int> a, pair<int, int> b) {
-  a = find(a);
-  b = find(b);
-  if (a != b) {
-    if (sz[a] < sz[b])
-      swap(a, b);
-    parent[b] = a;
-    sz[a] += sz[b];
-  }
-}
-
-void Union_aux(pair<int, int> a, pair<int, int> b) {
-  Union({pre[a.first], pre[a.second]}, {pre[b.first], pre[b.second]});
+void aux_add(pair<int, int> u, pair<int, int> v) {
+  auxiliary[{pre[u.first], pre[u.second]}].push_back({pre[v.first], pre[v.second]});
+  auxiliary[{pre[v.first], pre[v.second]}].push_back({pre[u.first], pre[u.second]});
 }
 
 void build_aux(int cur = root) {
   for (auto v : tree[cur]) {
     build_aux(v);
     if (pre[v] != 0 && (low[v] < pre[cur] || high[v] >= pre[cur] + nd[cur]))
-      Union_aux({par[cur], cur}, {cur, v});
+      aux_add({par[cur], cur}, {cur, v});
   }
   for (auto v : backedge[cur]) {
     if (pre[cur] < pre[v])
-      Union_aux({cur, v}, {par[v], v});
+      aux_add({cur, v}, {par[v], v});
     if (pre[cur] + nd[cur] <= pre[v])
-      Union_aux({par[cur], cur}, {par[v], v});
+      aux_add({par[cur], cur}, {par[v], v});
   }
+}
+
+set<int> cur_set;
+void dfs_conn(pair<int, int> p) {
+  vis_aux[p] = true;
+  vis[inv_pre[p.first]] = vis[inv_pre[p.second]] = true;
+  cur_set.insert(inv_pre[p.first]);
+  cur_set.insert(inv_pre[p.second]);
+  for (auto& x : auxiliary[p])
+    if (vis_aux[x] == false)
+      dfs_conn(x);
 }
 
 int main() {
@@ -136,6 +116,9 @@ int main() {
   ios_base::sync_with_stdio(false);
   cin.tie(0);
 
+  auto start = std::chrono::high_resolution_clock::now();
+
+  int n, m;
   cin >> n >> m;
   adj = vector<vector<int>>(n);
 
@@ -149,7 +132,8 @@ int main() {
 
   vis = vector<bool>(n);
   tree = backedge = vector<vector<int>>(n);
-  inv_pre = pre = par = nd = vector<int>(n, -1);
+  par = vector<int>(n, -1);
+  inv_pre = pre = nd = vector<int>(n, -1);
   low = high = vector<int>(n, -1);
 
   vector<int> roots;
@@ -158,57 +142,37 @@ int main() {
       root = i;
       roots.push_back(i);
       make_tree_dfs(i);
-      // make_tree_bfs(i);
       calc_pre_par_nd(i);
       calc_low_high(i);
+      build_aux(i);
     }
   }
-  // print(roots);
 
-  for (int i = 0; i < n; i++)
-    for (auto v : adj[i])
-      if (pre[i] < pre[v])
-        make({pre[i], pre[v]});
-
-  // for (auto root:roots){
-  //   build_aux(root);
-  // }
-
-  std::for_each(std::execution::par, roots.begin(), roots.end(), [&](auto root) {
-    build_aux(root);
-  });
-  
-  // for (size_t i = 0; i < roots.size(); ++i) {
-  //   build_aux(roots[i]);
-  // }
-
-  map<pair<int, int>, vector<pair<int, int>>> auxiliary;
-
-  for (auto p : parent)
-    auxiliary[find(p.first)].push_back(p.first);
-
-  vector<set<int>> ans;
   vis.assign(n, false);
-  for (auto p : auxiliary) {
-    set<int> aux;
-    for (auto x : p.second) {
-      aux.insert(inv_pre[x.first]);
-      aux.insert(inv_pre[x.second]);
-      vis[inv_pre[x.first]] = true;
-      vis[inv_pre[x.second]] = true;
+  for (int i = 0; i < n; i++) {
+    for (auto v : adj[i]) {
+      if (vis_aux[{pre[i], pre[v]}] == true || pre[i] > pre[v]) continue;
+      vis_aux[{pre[i], pre[v]}] = true;
+      dfs_conn({pre[i], pre[v]});
+      // cout << endl;
+      if (cur_set.size() > 1) ans.push_back(cur_set);
+      cur_set.clear();
     }
-    if (aux.size() > 1) ans.push_back(aux);
   }
 
   for (int i = 0; i < n; i++)
     if (!vis[i]) ans.push_back({i});
 
-  cout << ans.size() << endl;
-  for (auto s : ans) {
-    cout << s.size() << " ";
-    for (auto x : s) cout << x << " ";
-    cout << endl;
-  }
+  // cout << ans.size() << endl;
+  // for (auto& x:ans){
+  //   cout << x.size() << " ";
+  //   for (auto& y:x) cout << y << " ";
+  //   cout << endl;
+  // }
+
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+  std::cout << "Elapsed time: " << duration.count() << " microseconds" << std::endl;
 
   return 0;
 }
