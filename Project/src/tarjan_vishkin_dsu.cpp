@@ -154,12 +154,10 @@ int main(){
       root = i;
       roots.push_back(i);
       make_tree_dfs(i);
-      // make_tree_bfs(i);
       calc_pre_par_nd(i);
       calc_low_high(i);
     }
   }
-  // print(roots);
     
   for (int i=0;i<n;i++)
     for (auto v:adj[i])
@@ -199,3 +197,16 @@ int main(){
     
   return 0;
 }
+
+/*
+4 5
+0 3
+0 1
+3 0
+2 1
+2 3
+
+1
+4 0 1 2 3 
+
+*/

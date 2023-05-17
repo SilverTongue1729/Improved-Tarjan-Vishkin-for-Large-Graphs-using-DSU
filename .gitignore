@@ -1,2 +1,5 @@
 src/steps_graphs/*
 src/large_cycle_00.in
+Project/src/TV
+Project/src/TV_DSU
+Project/src/Tarjan
