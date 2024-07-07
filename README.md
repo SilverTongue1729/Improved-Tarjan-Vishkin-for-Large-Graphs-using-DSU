@@ -20,4 +20,4 @@ Comparing the performance of Tarjan-Vishkin algorithm with and without DSUs
 
 - The graph need not be connected
 - graph need not be simple
-- graph doesn't have self loops
+- graph doesn't have self-loops
